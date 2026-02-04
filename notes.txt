@@ -112,6 +112,7 @@ def solve_from_csv(file_path, target, count=8):
 
     # 3. Logic: combinations_with_replacement allows duplicates
     for combo in itertools.combinations_with_replacement(items, count):
+		# print out combination?
         # Extract just the values from the tuples for the sum
         current_sum = sum(item[1] for item in combo)
         

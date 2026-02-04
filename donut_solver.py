@@ -7,7 +7,10 @@ import time
 from scipy.special import comb as combinations_with_replacement
 
 # --- CONFIGURATION ---
-INPUT_FILE = '4star_berries.csv'          # File in the same directory
+# INPUT_FILE = '4star_berries.csv'          # File in the same directory
+# INPUT_FILE = '1star_berries.csv'          # File in the same directory
+# INPUT_FILE = 'all_berries.csv'          # File in the same directory
+INPUT_FILE = 'hyper_berries.csv'          # File in the same directory
 SELECTION_SIZE = 8                  # Number of items to pick (r)
 MIN_THRESHOLD = 400                  # Threshold ONLY applies to the value(s) that match
 TARGET_MATCH_COUNT = 2              # E.g., 2 means we need at least 2 identical scores
@@ -19,7 +22,8 @@ MAX_RESULTS = 50                 # Maximum number of results to find before stop
 #    - The solver finds a match (e.g., Spicy=60, Sour=60). It only PASSES if 
 #      the Sweet Score is ALSO 60, OR if Sweet Score was listed here.
 # 2. Use "All" to not restrict which scores can be part of the match.
-TARGET_SCORE_NAMES = ["Sour Score"] 
+# TARGET_SCORE_NAMES = ["Sweet"] 
+TARGET_SCORE_NAMES = "All" 
 # ---------------------
 
 def solve_recipes():
@@ -30,6 +34,7 @@ def solve_recipes():
 
     df = pd.read_csv(INPUT_FILE)
     score_columns = ["Sweet Score", "Spicy Score", "Sour Score", "Bitter Score", "Fresh Score"]
+    flavor_score = 0
     
     # 1a. Validate and Set up Target Scores
     global TARGET_SCORE_NAMES

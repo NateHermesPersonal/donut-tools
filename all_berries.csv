@@ -1,4 +1,37 @@
 Berry Name,Sweet Score,Spicy Score,Sour Score,Bitter Score,Fresh Score
+Cheri Berry,0,10,0,0,0
+Chesto Berry,0,0,0,0,10
+Pecha Berry,10,0,0,0,0
+Rawst Berry,0,0,0,10,0
+Aspear Berry,0,0,10,0,0
+Oran Berry,0,5,5,5,5
+Persim Berry,5,5,5,0,5
+Lum Berry,5,5,0,5,5
+Sitrus Berry,5,0,5,5,5
+Pomeg Berry,10,10,0,10,0
+Kelpsy Berry,0,0,10,10,10
+Qualot Berry,10,10,10,0,0
+Hondew Berry,0,10,0,10,10
+Grepa Berry,10,0,10,0,10
+Tamato Berry,0,15,0,0,10
+Occa Berry,10,15,0,0,0
+Passho Berry,0,0,0,10,15
+Wacan Berry,15,0,10,0,0
+Rindo Berry,0,10,0,15,0
+Yache Berry,0,0,15,0,10
+Chople Berry,0,15,0,10,0
+Kebia Berry,0,0,10,0,15
+Shuca Berry,15,10,0,0,0
+Coba Berry,0,0,0,15,10
+Payapa Berry,10,0,15,0,0
+Tanga Berry,0,20,10,0,0
+Charti Berry,0,10,0,0,20
+Kasib Berry,20,0,0,0,10
+Haban Berry,10,0,0,20,0
+Colbur Berry,0,0,20,10,0
+Babiri Berry,0,25,0,0,10
+Chilan Berry,10,0,0,0,25
+Roseli Berry,25,0,0,10,0
 Hyper Cheri Berry,0,40,0,0,0
 Hyper Chesto Berry,0,0,0,0,40
 Hyper Pecha Berry,40,0,0,0,0

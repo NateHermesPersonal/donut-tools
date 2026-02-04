@@ -10,7 +10,7 @@ from pynput import keyboard
 
 # --- CONFIGURATION ---
 OUTPUT_FILE = 'donut_data.csv'
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 class AreaSelector:
     """Semi-transparent full-screen overlay for selecting the screen region."""

@@ -1,0 +1,146 @@
+if I have a list of items, each with a value, how can I find combinations of 8 items that add to a target value?
+
+##python code
+
+import itertools
+
+def find_combinations(items, target, count=8):
+    # items should be a list of tuples: (name, value)
+    combinations = itertools.combinations(items, count)
+    
+    for combo in combinations:
+        current_sum = sum(item[1] for item in combo)
+        if current_sum == target:
+            return combo
+    return None
+
+# Example Usage:
+data = [("Item1", 10), ("Item2", 15), ("Item3", 20), ...] 
+result = find_combinations(data, 150)
+
+-------------------------------------------
+
+what if I want to target a value or greater than that value?
+
+##python code
+
+import itertools
+
+def find_best_overshoot(items, target, count=8):
+    best_combo = None
+    min_overshoot = float('inf')
+    
+    # Iterate through all combinations of 8
+    for combo in itertools.combinations(items, count):
+        current_sum = sum(combo)
+        
+        if current_sum >= target:
+            overshoot = current_sum - target
+            
+            # If we find an exact match, stop immediately
+            if overshoot == 0:
+                return combo, current_sum
+            
+            # If this is the closest we've been to the target, save it
+            if overshoot < min_overshoot:
+                min_overshoot = overshoot
+                best_combo = combo
+                
+    return best_combo, sum(best_combo) if best_combo else None
+
+-----------------------------------------------------------
+
+What if I want to allow for multiple of an item?
+
+##python code
+
+import itertools
+
+def find_best_with_duplicates(items, target, count=8):
+    # items: a list of values [10, 15, 20]
+    best_combo = None
+    min_overshoot = float('inf')
+    
+    # This allows picking the same item up to 'count' times
+    for combo in itertools.combinations_with_replacement(items, count):
+        current_sum = sum(combo)
+        
+        if current_sum >= target:
+            overshoot = current_sum - target
+            
+            if overshoot == 0:
+                return combo, current_sum # Perfect match
+            
+            if overshoot < min_overshoot:
+                min_overshoot = overshoot
+                best_combo = combo
+                
+    return best_combo, sum(best_combo) if best_combo else None
+
+# Example
+my_items = [10.5, 20, 33.2, 50]
+target_val = 200
+result, total = find_best_with_duplicates(my_items, target_val)
+
+print(f"Items: {result}")
+print(f"Total: {total}")
+
+----------------------------------------------
+
+How can I import the items from a CSV file?
+
+##python code
+
+import pandas as pd
+import itertools
+
+def solve_from_csv(file_path, target, count=8):
+    # 1. Load the data
+    try:
+        df = pd.read_csv(file_path)
+    except FileNotFoundError:
+        return "Error: File not found. Check the file path."
+
+    # 2. Convert columns to list of tuples (name, value)
+    # This keeps names associated with their values
+    items = list(df.itertuples(index=False, name=None))
+    
+    best_combo = None
+    min_overshoot = float('inf')
+
+    print(f"Searching for combinations... this may take a moment.")
+
+    # 3. Logic: combinations_with_replacement allows duplicates
+    for combo in itertools.combinations_with_replacement(items, count):
+        # Extract just the values from the tuples for the sum
+        current_sum = sum(item[1] for item in combo)
+        
+        if current_sum >= target:
+            overshoot = current_sum - target
+            
+            if overshoot == 0:
+                return combo, current_sum  # Perfect match found
+            
+            if overshoot < min_overshoot:
+                min_overshoot = overshoot
+                best_combo = combo
+
+    return best_combo, min_overshoot + target if best_combo else None
+
+# --- SETTINGS ---
+FILE_NAME = 'items.csv'  # Your file name
+TARGET_VALUE = 250.00     # Your target sum
+TOTAL_ITEMS = 8           # Exactly 8 items
+
+# Run the function
+result, total = solve_from_csv(FILE_NAME, TARGET_VALUE, TOTAL_ITEMS)
+
+# 4. Display Results
+if result:
+    print(f"\n--- SUCCESS ---")
+    print(f"Target: {TARGET_VALUE} | Found Total: {total:.2f}")
+    print("Selected Items:")
+    for name, val in result:
+        print(f"- {name}: {val}")
+else:
+    print("No combination found that meets the target.")

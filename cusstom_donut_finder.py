@@ -20,13 +20,13 @@ def readData(file_path):
                 else:
                     berryData[name][key] = row[key]
             # print(f"{row['Berry Name']} has Flavor Score {row['Flavor Score']}")
-        print(f"Read in {file_path} and created data Dictionary with {len(berryData)} entries")
+        # print(f"Read in {file_path} and created data Dictionary with {len(berryData)} entries")
 
 def createBerryDict():
     for key in berryData:
         newBerry = Berry(key)
         berryDict[key] = newBerry
-    print(f"Created Berry Dictionary of size {len(berryDict)}")
+    # print(f"Created Berry Dictionary of size {len(berryDict)}")
 
 def getStarRating():
     pass
@@ -57,7 +57,9 @@ class Berry():
 
 readData('hyper_berries.csv')
 createBerryDict()
-print(berryDict['Hyper Cheri Berry'].flavorScore)
+for key in berryDict:
+    entry = berryDict[key]
+    print(f"{entry.name} has Flavor Score {entry.flavorScore}")
 # newDonut = Donut([])
 # newBerry = Berry("Hyper Colbur Berry")
 # for key in berryData:

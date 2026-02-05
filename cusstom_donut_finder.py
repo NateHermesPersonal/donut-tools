@@ -55,12 +55,14 @@ class Berry():
         # print(self.flavorScore)
 
 
-readData('hyper_berries.csv')
-createBerryDict()
-for key in berryDict:
-    entry = berryDict[key]
-    print(f"{entry.name} has Flavor Score {entry.flavorScore}")
-# newDonut = Donut([])
-# newBerry = Berry("Hyper Colbur Berry")
-# for key in berryData:
-#     print(f"{key}: {berryData[key]}")
+if __name__ == "__main__":
+    readData('hyper_berries.csv')
+    createBerryDict()
+
+    for key in berryDict:
+        entry = berryDict[key]
+        print(f"{entry.name} has Flavor Score {entry.flavorScore}")
+    # newDonut = Donut([])
+    # newBerry = Berry("Hyper Colbur Berry")
+    # for key in berryData:
+    #     print(f"{key}: {berryData[key]}")

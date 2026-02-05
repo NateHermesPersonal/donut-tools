@@ -1,5 +1,6 @@
 import csv
 import re
+import bisect
 
 starRatings = [0,120,240,400,700,960]
 berryData = {}
@@ -28,8 +29,10 @@ def createBerryDict():
         berryDict[key] = newBerry
     # print(f"Created Berry Dictionary of size {len(berryDict)}")
 
-def getStarRating():
-    pass
+def getStarRating(flavorScore): # put this calculation inside Donut init?
+    rating = (bisect.bisect_right(starRatings, flavorScore)) - 1
+    # print(f"{rating=}")
+    return rating
 
 def getFullBerryName():
     pass
@@ -59,10 +62,17 @@ if __name__ == "__main__":
     readData('hyper_berries.csv')
     createBerryDict()
 
-    for key in berryDict:
-        entry = berryDict[key]
-        print(f"{entry.name} has Flavor Score {entry.flavorScore}")
+    # for key in berryDict:
+    #     entry = berryDict[key]
+    #     print(f"{entry.name} has Flavor Score {entry.flavorScore}")
+
+    target = 1050
+    starRating = getStarRating(target)
+    multiplier = 1 + (.1 * starRating)
+    print(f"A Flavor Score of {target} means the donut is {starRating} star(s), with a multiplier of {multiplier}")
+
     # newDonut = Donut([])
     # newBerry = Berry("Hyper Colbur Berry")
+    
     # for key in berryData:
     #     print(f"{key}: {berryData[key]}")

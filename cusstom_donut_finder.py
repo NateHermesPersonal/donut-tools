@@ -32,7 +32,8 @@ def createBerryDict():
 def getStarRating(flavorScore): # put this calculation inside Donut init?
     rating = (bisect.bisect_right(starRatings, flavorScore)) - 1
     # print(f"{rating=}")
-    return rating
+    multiplier = 1 + (.1 * rating)
+    return rating , multiplier
 
 def getFullBerryName():
     pass
@@ -67,8 +68,7 @@ if __name__ == "__main__":
     #     print(f"{entry.name} has Flavor Score {entry.flavorScore}")
 
     target = 1050
-    starRating = getStarRating(target)
-    multiplier = 1 + (.1 * starRating)
+    starRating, multiplier = getStarRating(target)
     print(f"A Flavor Score of {target} means the donut is {starRating} star(s), with a multiplier of {multiplier}")
 
     # newDonut = Donut([])

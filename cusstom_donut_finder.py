@@ -45,14 +45,9 @@ def findDonuts(target):
     for combo in itertools.combinations_with_replacement(scoreList, 8):
         flavoScores = [item[1] for item in combo]
         if sum(flavoScores) == target:
-            # create Donut with list of berries
             berries = [item[0] for item in combo]
-            counts = Counter(berries)
-            list = []
-            for item, count in counts.items():
-                list.append(f"{count} {item}")
-            print(f"Creating a donut with {', '.join(list)}")
-            # print(berries)
+            donut = Donut(berries)
+            print(donut)
 
 
 class Donut:
@@ -71,6 +66,7 @@ class Donut:
             self.starRating = 0
             self.totalLevels = 0
             self.totalCalories = 0
+            self.names = berryList
             for berryName in berryList:
                 newBerry = Berry(berryName)
                 self.berries.append(newBerry)
@@ -86,6 +82,14 @@ class Donut:
             self.starRating, multiplier = getStarRating(self.flavorScore)
             self.totalLevels = math.floor(self.totalLevels * multiplier) # rounds down
             self.totalCalories = int(self.totalCalories * multiplier)
+
+    def __str__(self):
+        string = "New Donut"
+        list = []
+        counts = Counter(self.names)
+        for item, count in counts.items():
+            list.append(f"{count} {item}")
+        return f"Created a new Donut with {', '.join(list)}"
 
 class Berry():
     def __init__(self, name):

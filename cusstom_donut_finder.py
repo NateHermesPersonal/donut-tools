@@ -1,4 +1,7 @@
 import csv
+from datetime import datetime
+import threading
+import time
 import math
 import re
 import bisect
@@ -9,6 +12,7 @@ starRatings = [0,120,240,400,700,960]
 berryData = {}
 scoreList = []
 berryDict = {}
+donutList = []
 
 
 def readInData(file_path):
@@ -42,15 +46,41 @@ def getStarRating(flavorScore): # put this calculation inside Donut init?
     return rating, multiplier
 
 def findDonuts(target, numBerries=8):
-    count = 0
+    start_time = time.perf_counter()
+    combinations = 0
+    threads = []
     for combo in itertools.combinations_with_replacement(scoreList, numBerries):
-        count += 1
+        combinations += 1
         flavorScores = [item[1] for item in combo]
-        if sum(flavorScores) == target:
+        if sum(flavorScores) >= target:
             berries = [item[0] for item in combo]
-            donut = Donut(berries)
-            print(donut)
-    print(f"Looked through {count:,} combinations of {numBerries} berries")
+            t = threading.Thread(target=newDonut, args=[berries])
+            t.start()
+            threads.append(t)
+    for thread in threads:
+        thread.join()
+            # donutList.append("1")
+            # print(donut)
+    # print(f"Looked through {count:,} combinations of {numBerries} berries and found {len(donutList)} suitable donuts (target Flavor Score of {target})")
+    end_time = time.perf_counter()
+    elapsedTime = f"{end_time - start_time:.6f}"
+    createRecipeFile(combinations, numBerries, target, elapsedTime)
+    # end_time = time.perf_counter()
+    # print(f"Elapsed time: {end_time - start_time:.6f} seconds")
+
+def newDonut(berries):
+    global donutList
+    donut = Donut(berries)
+    donutList.append(donut)
+
+def createRecipeFile(combinations, numBerries, target, elapsedTime):
+    dateString = datetime.now().strftime("%m%d%y_%H%M%S")
+    # print(f"{dateString}")
+    file_path = f"output/{dateString} donut recipes.txt"
+    with open(file_path, mode='w') as file:
+        file.write(f"Looked through {combinations:,} combinations of donuts with {numBerries} berries and found these {len(donutList):,} suitable donuts in {elapsedTime} seconds (target Flavor Score of {target})\n\n")
+        for donut in donutList:
+            file.write(str(donut))
 
 
 class Donut:
@@ -87,19 +117,17 @@ class Donut:
             self.totalCalories = int(self.totalCalories * multiplier)
 
     def __str__(self):
-        string = "New Donut"
         list = []
         counts = Counter(self.names)
         for item, count in counts.items():
             list.append(f"{count} {item}")
         string = (
             f"__________\n"
-            f"Donut ({', '.join(list)})\n"
-            f"Flavor Score: {self.flavorScore}\n"
-            f"Star Rating: {self.starRating}\n"
+            f"{self.starRating} Star Donut ({', '.join(list)})\n"
+            # f"Flavor Score: {self.flavorScore}\n"
             f"Bonus Levels: {self.totalLevels}\n"
             f"Calories: {self.totalCalories}\n"
-            f"__________"
+            f"__________\n"
         )
         return string
 
@@ -116,32 +144,9 @@ class Berry():
         self.levels = int(entry['Levels'])
         self.calories = int(entry['Calories'])
 
-        # print(self.flavorScore)
-
 
 if __name__ == "__main__":
     readInData('hyper_berries.csv')
     createBerryDict()
-
-    # for key in berryDict:
-    #     entry = berryDict[key]
-    #     print(f"{entry.name} has Flavor Score {entry.flavorScore}")
-
-    # target = 1050
-    # starRating, multiplier = getStarRating(target)
-    # print(f"A Flavor Score of {target} means the donut is {starRating} star(s), with a multiplier of {multiplier}")
-
-    # newDonut = Donut(["Hyper Colbur Berry","Hyper Colbur Berry","Hyper Colbur Berry"])
-    # print(f"{newDonut.starRating=} {newDonut.totalCalories=} {newDonut.totalLevels=}")
-    # newBerry = Berry("Hyper Colbur Berry")
     
-    findDonuts(1200, 8)
-
-    # combos = itertools.combinations_with_replacement('ABC', 3)
-    # for combo in combos:
-    #     first = combo[0]   # Access by index
-    #     last = combo[-1]    # Access last element
-    #     print(f"Full tuple: {combo} | First: {first} | Last: {last}")
-
-    # for key in berryData:
-    #     print(f"{key}: {berryData[key]}")
+    findDonuts(960, 8)

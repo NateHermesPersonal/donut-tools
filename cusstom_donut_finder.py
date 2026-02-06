@@ -2,13 +2,16 @@ import csv
 import math
 import re
 import bisect
+import itertools
+from collections import Counter
 
 starRatings = [0,120,240,400,700,960]
 berryData = {}
+scoreList = []
 berryDict = {}
 
 
-def readData(file_path):
+def readInData(file_path):
     global berryData
     with open(file_path, mode='r') as file:
         berryData = {}
@@ -27,7 +30,9 @@ def readData(file_path):
 def createBerryDict():
     for key in berryData:
         newBerry = Berry(key)
+        scoreList.append((key, newBerry.flavorScore))
         berryDict[key] = newBerry
+    # print(scoreList)
     # print(f"Created Berry Dictionary of size {len(berryDict)}")
 
 def getStarRating(flavorScore): # put this calculation inside Donut init?
@@ -36,8 +41,18 @@ def getStarRating(flavorScore): # put this calculation inside Donut init?
     multiplier = 1 + (.1 * rating)
     return rating, multiplier
 
-def getFullBerryName():
-    pass
+def findDonuts(target):
+    for combo in itertools.combinations_with_replacement(scoreList, 8):
+        flavoScores = [item[1] for item in combo]
+        if sum(flavoScores) == target:
+            # create Donut with list of berries
+            berries = [item[0] for item in combo]
+            counts = Counter(berries)
+            list = []
+            for item, count in counts.items():
+                list.append(f"{count} {item}")
+            print(f"Creating a donut with {', '.join(list)}")
+            # print(berries)
 
 
 class Donut:
@@ -89,7 +104,7 @@ class Berry():
 
 
 if __name__ == "__main__":
-    readData('hyper_berries.csv')
+    readInData('hyper_berries.csv')
     createBerryDict()
 
     # for key in berryDict:
@@ -100,9 +115,17 @@ if __name__ == "__main__":
     # starRating, multiplier = getStarRating(target)
     # print(f"A Flavor Score of {target} means the donut is {starRating} star(s), with a multiplier of {multiplier}")
 
-    newDonut = Donut(["Hyper Colbur Berry","Hyper Colbur Berry","Hyper Colbur Berry"])
-    print(f"{newDonut.starRating=} {newDonut.totalCalories=} {newDonut.totalLevels=}")
+    # newDonut = Donut(["Hyper Colbur Berry","Hyper Colbur Berry","Hyper Colbur Berry"])
+    # print(f"{newDonut.starRating=} {newDonut.totalCalories=} {newDonut.totalLevels=}")
     # newBerry = Berry("Hyper Colbur Berry")
     
+    findDonuts(1200)
+
+    # combos = itertools.combinations_with_replacement('ABC', 3)
+    # for combo in combos:
+    #     first = combo[0]   # Access by index
+    #     last = combo[-1]    # Access last element
+    #     print(f"Full tuple: {combo} | First: {first} | Last: {last}")
+
     # for key in berryData:
     #     print(f"{key}: {berryData[key]}")

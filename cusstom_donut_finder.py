@@ -70,6 +70,7 @@ def findDonuts(target, numBerries=8):
 
 def newDonut(berries):
     global donutList
+    print("creating new Donut object")
     donut = Donut(berries)
     donutList.append(donut)
 
@@ -149,4 +150,4 @@ if __name__ == "__main__":
     readInData('hyper_berries.csv')
     createBerryDict()
     
-    findDonuts(960, 8)
+    findDonuts(1200, 8)

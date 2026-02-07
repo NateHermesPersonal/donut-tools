@@ -48,7 +48,7 @@ def getStarRating(flavorScore): # put this calculation inside Donut init?
 
 def findDonuts(target, numBerries=8):
     start_time = time.perf_counter()
-    random.shuffle(scoreList)
+    # random.shuffle(scoreList) # shuffle to verify threads
     combinations = 0
     threads = []
     for combo in itertools.combinations_with_replacement(scoreList, numBerries):
@@ -72,7 +72,7 @@ def findDonuts(target, numBerries=8):
 
 def newDonut(berries):
     global donutList
-    print("creating new Donut object")
+    # print("creating new Donut object")
     donut = Donut(berries)
     donutList.append(donut)
 
@@ -81,7 +81,7 @@ def createRecipeFile(combinations, numBerries, target, elapsedTime):
     # print(f"{dateString}")
     file_path = f"output/{dateString} donut recipes.txt"
     with open(file_path, mode='w') as file:
-        file.write(f"Looked through {combinations:,} combinations of donuts with {numBerries} berries and found these {len(donutList):,} suitable donuts in {elapsedTime} seconds (target Flavor Score of {target})\n\n")
+        file.write(f"Looked through {combinations:,} combinations of donuts with {numBerries} berries and found these {len(donutList):,} suitable donuts in {elapsedTime} seconds (targeting Flavor Score of {target})\n\n")
         for donut in donutList:
             file.write(str(donut))
 

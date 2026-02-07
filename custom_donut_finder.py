@@ -104,7 +104,7 @@ class Donut:
             self.totalCalories = 0
             self.names = berryList
             for berryName in berryList:
-                newBerry = Berry(berryName)
+                newBerry = Berry(berryName) # do I need to create Berry, or can I reference it in berryDict?
                 self.berries.append(newBerry)
             for berry in self.berries:
                 self.totalSweet += berry.sweet

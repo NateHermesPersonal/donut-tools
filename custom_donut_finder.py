@@ -151,12 +151,13 @@ if __name__ == "__main__":
     berries = load_berries('hyper_berries.csv')
     
     flavor_scores = [b[1] for b in berries]
-    max_possible = sum(sorted(flavor_scores, reverse=True)[:8])
+    # max_possible = sum(sorted(flavor_scores, reverse=True)[:8])
     # print(f"Loaded {len(berries)} berries. Theoretical max flavor (8): {max_possible}")
     print(f"Loaded {len(berries)} berries.")
     
-    TARGET = 960   # adjust as needed
-    results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=8)
+    TARGET = 700   # adjust as needed
+    NUM_BERRIES= 8  # adjust as needed
+    results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=NUM_BERRIES)
     
     if results:
-        save_results(results, TARGET, 8, elapsed)
+        save_results(results, TARGET, NUM_BERRIES, elapsed)

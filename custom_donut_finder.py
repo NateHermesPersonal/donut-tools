@@ -1,163 +1,134 @@
 import csv
+from collections import Counter
 from datetime import datetime
-import threading
 import time
 import math
-import re
 import bisect
-import itertools
-import random
-from collections import Counter
 
-starRatings = [0,120,240,400,700,960]
-berryData = {}
-scoreList = []
-berryDict = {}
-donutList = []
+# Star thresholds and multipliers
+starRatings = [0, 120, 240, 400, 700, 960]
+def get_star_rating(flavor_score):
+    rating = bisect.bisect_right(starRatings, flavor_score) - 1
+    return rating, 1 + 0.1 * rating
 
+# ----------------------------------------------------
+# Data loading
+# ----------------------------------------------------
+def load_berries(file_path='hyper_berries.csv'):
+    berries = []
+    with open(file_path, mode='r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            name = row['Berry Name'].strip()
+            if not name:
+                continue
+            scores = ['Sweet Score', 'Spicy Score', 'Sour Score', 'Bitter Score', 'Fresh Score']
+            flavor = sum(int(row[k]) for k in scores)
+            levels = int(row['Levels'])
+            calories = int(row['Calories'])
+            berries.append((name, flavor, levels, calories))
+    # Sort descending by flavor score
+    berries.sort(key=lambda x: x[1], reverse=True)
+    return berries
 
-def readInData(file_path):
-    global berryData
-    with open(file_path, mode='r') as file:
-        berryData = {}
-        csv_reader = csv.DictReader(file)
-        for row in csv_reader:
-            name = ""
-            for key in row.keys():
-                if re.search("Name", key):
-                    name = row[key]
-                    berryData[name] = {}
-                else:
-                    berryData[name][key] = row[key]
-            # print(f"{row['Berry Name']} has Flavor Score {row['Flavor Score']}")
-        # print(f"Read in {file_path} and created data Dictionary with {len(berryData)} entries")
-
-def createBerryDict():
-    for key in berryData:
-        newBerry = Berry(key)
-        scoreList.append((key, newBerry.flavorScore))
-        berryDict[key] = newBerry
-    # print(scoreList)
-    # print(f"Created Berry Dictionary of size {len(berryDict)}")
-
-def getStarRating(flavorScore): # put this calculation inside Donut init?
-    rating = (bisect.bisect_right(starRatings, flavorScore)) - 1
-    # print(f"{rating=}")
-    multiplier = 1 + (.1 * rating)
-    return rating, multiplier
-
-def findDonuts(target, numBerries=8):
+# ----------------------------------------------------
+# Backtracking to find combinations
+# ----------------------------------------------------
+def find_high_score_donuts(berries, target, num_berries=8, max_results=5000):
     start_time = time.perf_counter()
-    # random.shuffle(scoreList) # shuffle to verify threads
-    combinations = 0
-    threads = []
-    for combo in itertools.combinations_with_replacement(scoreList, numBerries):
-        combinations += 1
-        flavorScores = [item[1] for item in combo]
-        if sum(flavorScores) >= target:
-            berries = [item[0] for item in combo]
-            # newDonut(berries)
-
-            t = threading.Thread(target=newDonut, args=[berries])
-            t.start()
-            threads.append(t)
-    for thread in threads:
-        thread.join()
-            # donutList.append("1")
-            # print(donut)
-    # print(f"Looked through {count:,} combinations of {numBerries} berries and found {len(donutList)} suitable donuts (target Flavor Score of {target})")
-    end_time = time.perf_counter()
-    elapsedTime = f"{end_time - start_time:.2f}"
-    createRecipeFile(combinations, numBerries, target, elapsedTime)
-    # end_time = time.perf_counter()
-    # print(f"Elapsed time: {end_time - start_time:.6f} seconds")
-
-def canIMakeDonut():
-    pass
-
-def newDonut(berries):
-    global donutList
-    # print("creating new Donut object")
-    donut = Donut(berries)
-    donutList.append(donut)
-
-def createRecipeFile(combinations, numBerries, target, elapsedTime):
-    dateString = datetime.now().strftime("%m%d%y_%H%M%S")
-    # print(f"{dateString}")
-    file_path = f"output/{dateString} donut recipes.txt"
-    with open(file_path, mode='w') as file:
-        file.write(f"Looked through {combinations:,} combinations of donuts with {numBerries} berries and found these {len(donutList):,} suitable donuts in {elapsedTime} seconds (targeting Flavor Score of {target})\n\n")
-        for donut in donutList:
-            file.write(str(donut))
-
-
-class Donut:
-    def __init__(self, berryList):
-        length = len(berryList)
-        if length < 2 or length > 8:
-            print(f"The provided list of length {length} is outside the bounds of required berries (3-8)!")
-        else:
-            self.berries = []
-            self.totalSweet = 0
-            self.totalSpicy = 0
-            self.totalSour = 0
-            self.totalBitter = 0
-            self.totalFresh = 0
-            self.flavorScore = 0
-            self.starRating = 0
-            self.totalLevels = 0
-            self.totalCalories = 0
-            self.names = berryList
-            for berryName in berryList:
-                newBerry = berryDict[berryName]
-                # newBerry = Berry(berryName) # do I need to create Berry, or can I reference it in berryDict?
-                self.berries.append(newBerry)
-            for berry in self.berries:
-                self.totalSweet += berry.sweet
-                self.totalSpicy += berry.spicy
-                self.totalSour += berry.sour
-                self.totalBitter += berry.bitter
-                self.totalFresh += berry.fresh
-                self.flavorScore += berry.flavorScore
-                self.totalLevels += berry.levels
-                self.totalCalories += berry.calories
-            self.starRating, multiplier = getStarRating(self.flavorScore)
-            self.totalLevels = math.floor(self.totalLevels * multiplier) # rounds down
-            self.totalCalories = int(self.totalCalories * multiplier)
-
-    def __str__(self):
-        list = []
-        counts = Counter(self.names)
-        for item, count in counts.items():
-            list.append(f"{count} {item}")
-        string = (
-            f"__________\n"
-            f"{self.starRating} Star Donut ({', '.join(list)})\n"
-            # f"Flavor Score: {self.flavorScore}\n"
-            f"Bonus Levels: {self.totalLevels}\n"
-            f"Calories: {self.totalCalories}\n"
-            f"__________\n"
-        )
-        return string
-
-class Berry():
-    def __init__(self, name):
-        self.name = name
-        entry = berryData[self.name]
-        self.sweet = int(entry['Sweet Score'])
-        self.spicy = int(entry['Spicy Score'])
-        self.sour = int(entry['Sour Score'])
-        self.bitter = int(entry['Bitter Score'])
-        self.fresh = int(entry['Fresh Score'])
-        self.flavorScore = self.sweet + self.spicy + self.sour + self.bitter + self.fresh
-        self.levels = int(entry['Levels'])
-        self.calories = int(entry['Calories'])
-
-
-if __name__ == "__main__":
-    readInData('hyper_berries.csv')
-    createBerryDict()
     
-    findDonuts(1200, 8)
-    # findDonuts(960, 8)
-    # findDonuts(700, 8)
+    # Unpack for faster access
+    names   = [b[0] for b in berries]
+    scores  = [b[1] for b in berries]
+    levels  = [b[2] for b in berries]
+    cal     = [b[3] for b in berries]
+    
+    results = []
+    best_min_found = target  # we can raise this to get only the very best
+    
+    def search(pos, remaining, cur_flavor, cur_levels, cur_cal, path):
+        nonlocal best_min_found
+        
+        if remaining == 0:
+            if cur_flavor >= best_min_found:
+                # Create compact result
+                counts = Counter(path)
+                rating, mult = get_star_rating(cur_flavor)
+                bonus_levels = math.floor(cur_levels * mult)
+                total_cal = int(cur_cal * mult)
+                
+                results.append({
+                    'names': counts,
+                    'flavor': cur_flavor,
+                    'stars': rating,
+                    'bonus_levels': bonus_levels,
+                    'calories': total_cal
+                })
+                
+                # Optional: keep only the very best
+                if cur_flavor > best_min_found:
+                    best_min_found = cur_flavor
+                    # could trim results here if we want only top-N
+            return
+        
+        # Pruning: even taking the best remaining berries isn't enough
+        max_possible = cur_flavor + scores[pos] * remaining
+        if max_possible < best_min_found:
+            return
+        
+        # Try taking this berry 0 or more times
+        for take in range(remaining + 1):
+            if pos + 1 < len(scores) and take == 0:
+                # skip this berry completely
+                search(pos + 1, remaining, cur_flavor, cur_levels, cur_cal, path)
+            else:
+                new_flavor = cur_flavor + take * scores[pos]
+                if new_flavor + scores[pos] * (remaining - take) < best_min_found:
+                    break  # no point taking more
+                new_levels = cur_levels + take * levels[pos]
+                new_cal = cur_cal + take * cal[pos]
+                search(pos + 1, remaining - take, new_flavor, new_levels, new_cal, path + [pos] * take)
+    
+    search(0, num_berries, 0, 0, 0, [])
+    
+    elapsed = time.perf_counter() - start_time
+    print(f"Found {len(results):,} donuts ≥ {target} flavor in {elapsed:.2f} seconds")
+    print(f"Best flavor found: {max(r['flavor'] for r in results) if results else 0}")
+    
+    return results, elapsed
+
+# ----------------------------------------------------
+# Output formatting
+# ----------------------------------------------------
+def save_results(results, target, num_berries, elapsed):
+    timestamp = datetime.now().strftime("%m%d%y_%H%M%S")
+    filename = f"output/donut_recipes_{timestamp}.txt"
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(f"Found {len(results):,} donuts with ≥ {target} flavor "
+                f"using {num_berries} berries in {elapsed:.2f}s\n\n")
+        
+        # Sort by flavor descending
+        sorted_res = sorted(results, key=lambda x: x['flavor'], reverse=True)
+        
+        for i, r in enumerate(sorted_res[:2000], 1):  # limit output size
+            parts = [f"{cnt} {names[pos]}" for pos, cnt in r['names'].items()]
+            line = (f"{i}. {r['stars']}★  ({', '.join(parts)})  "
+                    f"Flavor: {r['flavor']}  Bonus: {r['bonus_levels']}  "
+                    f"Cal: {r['calories']}\n")
+            f.write(line)
+    
+    print(f"Saved to: {filename}")
+
+# ----------------------------------------------------
+# Main
+# ----------------------------------------------------
+if __name__ == "__main__":
+    berries = load_berries()  # or pass your 'hyper_berries.csv'
+    print(f"Loaded {len(berries)} berries. Max flavor (8): {sum(b[1] for b in berries[:8])}")
+    
+    TARGET = 960   # change as needed: 700, 960, 1000, 1050...
+    results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=8)
+    
+    if results:
+        save_results(results, TARGET, 8, elapsed)

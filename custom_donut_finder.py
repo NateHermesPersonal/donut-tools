@@ -6,6 +6,7 @@ import math
 import re
 import bisect
 import itertools
+import random
 from collections import Counter
 
 starRatings = [0,120,240,400,700,960]
@@ -47,6 +48,7 @@ def getStarRating(flavorScore): # put this calculation inside Donut init?
 
 def findDonuts(target, numBerries=8):
     start_time = time.perf_counter()
+    random.shuffle(scoreList)
     combinations = 0
     threads = []
     for combo in itertools.combinations_with_replacement(scoreList, numBerries):
@@ -63,7 +65,7 @@ def findDonuts(target, numBerries=8):
             # print(donut)
     # print(f"Looked through {count:,} combinations of {numBerries} berries and found {len(donutList)} suitable donuts (target Flavor Score of {target})")
     end_time = time.perf_counter()
-    elapsedTime = f"{end_time - start_time:.6f}"
+    elapsedTime = f"{end_time - start_time:.2f}"
     createRecipeFile(combinations, numBerries, target, elapsedTime)
     # end_time = time.perf_counter()
     # print(f"Elapsed time: {end_time - start_time:.6f} seconds")
@@ -151,3 +153,5 @@ if __name__ == "__main__":
     createBerryDict()
     
     findDonuts(1200, 8)
+    # findDonuts(960, 8)
+    # findDonuts(700, 8)

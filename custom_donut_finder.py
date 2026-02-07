@@ -135,7 +135,8 @@ def save_results(results, target, num_berries, elapsed):
 # ----------------------------------------------------
 if __name__ == "__main__":
     berries = load_berries('hyper_berries.csv')  # change path if needed
-    print(f"Loaded {len(berries)} berries. Max flavor (8): {sum(b[1] for b in berries[:8])}")
+    # print(f"Loaded {len(berries)} berries. Max flavor (8): {sum(b[1] for b in berries[:8])}") # using top 8 berries, so 5 x 150 and 3 x 120
+    print(f"Loaded {len(berries)} berries.")
     
     TARGET = 700   # change as desired: 700, 960, 1000, 1050, etc.
     results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=8)

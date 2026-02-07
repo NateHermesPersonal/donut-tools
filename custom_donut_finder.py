@@ -156,7 +156,7 @@ if __name__ == "__main__":
     print(f"Loaded {len(berries)} berries.")
     
     TARGET = 700   # adjust as needed
-    NUM_BERRIES= 8  # adjust as needed
+    NUM_BERRIES = 8  # adjust as needed
     results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=NUM_BERRIES)
     
     if results:

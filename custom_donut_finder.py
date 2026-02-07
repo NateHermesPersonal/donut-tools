@@ -55,24 +55,23 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
     def search(pos, remaining, cur_flavor, cur_levels, cur_cal, path, remaining_counts):
         nonlocal best_min_found
         
-        if remaining == 0:
-            if cur_flavor >= best_min_found:
-                # Convert index counts → name counts
-                name_counts = Counter()
-                for idx, cnt in Counter(path).items():
-                    name_counts[names[idx]] = cnt
-                
-                # NEW: sum of original 'Count' for each unique berry used
-                total_used_inventory = 0
-                for berry_name in name_counts:           # for each unique berry in this recipe
-                    # find the original Count of this berry
-                    idx = names.index(berry_name)
-                    total_used_inventory += counts[idx]
-                rating, mult = get_star_rating(cur_flavor)
-                bonus_levels = math.floor(cur_levels * mult)
-                total_cal = int(cur_cal * mult)
-                if include_stars != "all":
-                    if rating in include_stars:    
+        if pos == len(scores):
+            if remaining == 0:
+                if cur_flavor >= best_min_found:
+                    name_counts = Counter()
+                    for idx, cnt in Counter(path).items():
+                        name_counts[names[idx]] = cnt
+                    
+                    total_used_inventory = 0
+                    for berry_name in name_counts:
+                        idx = names.index(berry_name)
+                        total_used_inventory += counts[idx]
+                    
+                    rating, mult = get_star_rating(cur_flavor)
+                    bonus_levels = math.floor(cur_levels * mult)
+                    total_cal = int(cur_cal * mult)
+                    
+                    if include_stars == "all" or rating in include_stars:
                         results.append({
                             'name_counts': name_counts,
                             'flavor': cur_flavor,
@@ -82,17 +81,19 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
                             'unique_berries': len(name_counts),
                             'inventory_sum': total_used_inventory
                         })
-                
-                if cur_flavor > best_min_found:
-                    best_min_found = cur_flavor
-            return
+                    
+                    if cur_flavor > best_min_found:
+                        best_min_found = cur_flavor
+            return  # ← always return here when pos is out of range
         
-        # Pruning: can't reach target even with max remaining
+        if remaining == 0:
+            return  # nothing more to assign, but we didn't reach the end → invalid path
+        
+        # Pruning
         max_possible = cur_flavor + scores[pos] * remaining
         if max_possible < best_min_found:
             return
         
-        # Try taking 0 to min(remaining, available) of this berry
         max_take = min(remaining, remaining_counts[pos])
         
         for take in range(max_take + 1):
@@ -100,13 +101,12 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
             new_levels = cur_levels + take * levels[pos]
             new_cal = cur_cal + take * cal[pos]
             
-            # Early pruning if even taking max of next berries won't help
+            # Early break if even max future won't help
             if take < max_take:
                 future_max = new_flavor + scores[pos] * (remaining - take)
                 if future_max < best_min_found:
                     break
             
-            # Create new remaining counts (immutable style for simplicity)
             new_remaining = remaining_counts[:]
             new_remaining[pos] -= take
             
@@ -166,9 +166,9 @@ if __name__ == "__main__":
     # print(f"Loaded {len(berries)} berries. Theoretical max flavor (8): {max_possible}")
     print(f"Loaded {len(berries)} berries.")
     
-    TARGET = 700   # adjust as needed
+    TARGET = 400   # adjust as needed
     NUM_BERRIES = 8  # adjust as needed
-    ONLY_STAR_RATING = [4]  # use "all" to include all star ratings
+    ONLY_STAR_RATING = [3,4]  # use "all" to include all star ratings
     results, elapsed = find_high_score_donuts(berries, TARGET, NUM_BERRIES, ONLY_STAR_RATING)
     
     if results:

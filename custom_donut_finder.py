@@ -56,6 +56,8 @@ def findDonuts(target, numBerries=8):
         flavorScores = [item[1] for item in combo]
         if sum(flavorScores) >= target:
             berries = [item[0] for item in combo]
+            # newDonut(berries)
+
             t = threading.Thread(target=newDonut, args=[berries])
             t.start()
             threads.append(t)

@@ -138,7 +138,7 @@ def save_results(results, target, num_berries, elapsed):
                 f"using {num_berries} berries in {elapsed:.2f}s "
                 f"(respecting current berry counts)\n\n")
         
-        sorted_res = sorted(results, key=lambda x: x['inventory_sum'], reverse=True)
+        sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['flavor']), reverse=True)
         
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]

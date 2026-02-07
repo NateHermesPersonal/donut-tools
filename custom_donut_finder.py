@@ -7,9 +7,12 @@ import bisect
 
 # Star thresholds and multipliers
 starRatings = [0, 120, 240, 400, 700, 960]
+
+
 def get_star_rating(flavor_score):
     rating = bisect.bisect_right(starRatings, flavor_score) - 1
     return rating, 1 + 0.1 * rating
+
 
 # ----------------------------------------------------
 # Data loading
@@ -27,14 +30,15 @@ def load_berries(file_path='hyper_berries.csv'):
             levels = int(row['Levels'])
             calories = int(row['Calories'])
             berries.append((name, flavor, levels, calories))
-    # Sort descending by flavor score
+    # Sort descending by flavor score → enables good pruning
     berries.sort(key=lambda x: x[1], reverse=True)
     return berries
+
 
 # ----------------------------------------------------
 # Backtracking to find combinations
 # ----------------------------------------------------
-def find_high_score_donuts(berries, target, num_berries=8, max_results=5000):
+def find_high_score_donuts(berries, target, num_berries=8):
     start_time = time.perf_counter()
     
     # Unpack for faster access
@@ -44,31 +48,32 @@ def find_high_score_donuts(berries, target, num_berries=8, max_results=5000):
     cal     = [b[3] for b in berries]
     
     results = []
-    best_min_found = target  # we can raise this to get only the very best
+    best_min_found = target  # we raise this when we find better donuts
     
     def search(pos, remaining, cur_flavor, cur_levels, cur_cal, path):
         nonlocal best_min_found
         
         if remaining == 0:
             if cur_flavor >= best_min_found:
-                # Create compact result
+                # Convert index counts → name counts right away
                 counts = Counter(path)
+                name_counts = {names[idx]: count for idx, count in counts.items()}
+                
                 rating, mult = get_star_rating(cur_flavor)
                 bonus_levels = math.floor(cur_levels * mult)
                 total_cal = int(cur_cal * mult)
                 
                 results.append({
-                    'names': counts,
+                    'name_counts': name_counts,
                     'flavor': cur_flavor,
                     'stars': rating,
                     'bonus_levels': bonus_levels,
                     'calories': total_cal
                 })
                 
-                # Optional: keep only the very best
+                # Track the best flavor found so far (optional tightening)
                 if cur_flavor > best_min_found:
                     best_min_found = cur_flavor
-                    # could trim results here if we want only top-N
             return
         
         # Pruning: even taking the best remaining berries isn't enough
@@ -76,26 +81,28 @@ def find_high_score_donuts(berries, target, num_berries=8, max_results=5000):
         if max_possible < best_min_found:
             return
         
-        # Try taking this berry 0 or more times
+        # Try taking 0 or more of this berry
         for take in range(remaining + 1):
-            if pos + 1 < len(scores) and take == 0:
-                # skip this berry completely
-                search(pos + 1, remaining, cur_flavor, cur_levels, cur_cal, path)
-            else:
-                new_flavor = cur_flavor + take * scores[pos]
-                if new_flavor + scores[pos] * (remaining - take) < best_min_found:
-                    break  # no point taking more
-                new_levels = cur_levels + take * levels[pos]
-                new_cal = cur_cal + take * cal[pos]
-                search(pos + 1, remaining - take, new_flavor, new_levels, new_cal, path + [pos] * take)
+            new_flavor = cur_flavor + take * scores[pos]
+            new_levels = cur_levels + take * levels[pos]
+            new_cal = cur_cal + take * cal[pos]
+            
+            # Early stop if adding more of this won't help
+            if take > 0 and new_flavor + scores[pos] * (remaining - take) < best_min_found:
+                break
+            
+            new_path = path + [pos] * take
+            search(pos + 1, remaining - take, new_flavor, new_levels, new_cal, new_path)
     
     search(0, num_berries, 0, 0, 0, [])
     
     elapsed = time.perf_counter() - start_time
     print(f"Found {len(results):,} donuts ≥ {target} flavor in {elapsed:.2f} seconds")
-    print(f"Best flavor found: {max(r['flavor'] for r in results) if results else 0}")
+    if results:
+        print(f"Best flavor found: {max(r['flavor'] for r in results)}")
     
     return results, elapsed
+
 
 # ----------------------------------------------------
 # Output formatting
@@ -111,11 +118,14 @@ def save_results(results, target, num_berries, elapsed):
         # Sort by flavor descending
         sorted_res = sorted(results, key=lambda x: x['flavor'], reverse=True)
         
-        for i, r in enumerate(sorted_res[:2000], 1):  # limit output size
-            parts = [f"{cnt} {names[pos]}" for pos, cnt in r['names'].items()]
-            line = (f"{i}. {r['stars']}★  ({', '.join(parts)})  "
-                    f"Flavor: {r['flavor']}  Bonus: {r['bonus_levels']}  "
-                    f"Cal: {r['calories']}\n")
+        for i, r in enumerate(sorted_res, 1):
+            parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
+            line = (
+                f"{i}. {r['stars']}★  ({', '.join(parts)})  "
+                f"Flavor: {r['flavor']}  "
+                f"Bonus Levels: {r['bonus_levels']}  "
+                f"Calories: {r['calories']}\n"
+            )
             f.write(line)
     
     print(f"Saved to: {filename}")
@@ -124,10 +134,10 @@ def save_results(results, target, num_berries, elapsed):
 # Main
 # ----------------------------------------------------
 if __name__ == "__main__":
-    berries = load_berries()  # or pass your 'hyper_berries.csv'
+    berries = load_berries('hyper_berries.csv')  # change path if needed
     print(f"Loaded {len(berries)} berries. Max flavor (8): {sum(b[1] for b in berries[:8])}")
     
-    TARGET = 960   # change as needed: 700, 960, 1000, 1050...
+    TARGET = 700   # change as desired: 700, 960, 1000, 1050, etc.
     results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=8)
     
     if results:

@@ -70,6 +70,9 @@ def findDonuts(target, numBerries=8):
     # end_time = time.perf_counter()
     # print(f"Elapsed time: {end_time - start_time:.6f} seconds")
 
+def canIMakeDonut():
+    pass
+
 def newDonut(berries):
     global donutList
     # print("creating new Donut object")
@@ -104,7 +107,8 @@ class Donut:
             self.totalCalories = 0
             self.names = berryList
             for berryName in berryList:
-                newBerry = Berry(berryName) # do I need to create Berry, or can I reference it in berryDict?
+                newBerry = berryDict[berryName]
+                # newBerry = Berry(berryName) # do I need to create Berry, or can I reference it in berryDict?
                 self.berries.append(newBerry)
             for berry in self.berries:
                 self.totalSweet += berry.sweet

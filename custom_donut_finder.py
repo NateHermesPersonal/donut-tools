@@ -62,6 +62,12 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
                 for idx, cnt in Counter(path).items():
                     name_counts[names[idx]] = cnt
                 
+                # NEW: sum of original 'Count' for each unique berry used
+                total_used_inventory = 0
+                for berry_name in name_counts:           # for each unique berry in this recipe
+                    # find the original Count of this berry
+                    idx = names.index(berry_name)
+                    total_used_inventory += counts[idx]
                 rating, mult = get_star_rating(cur_flavor)
                 bonus_levels = math.floor(cur_levels * mult)
                 total_cal = int(cur_cal * mult)
@@ -72,7 +78,9 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
                             'flavor': cur_flavor,
                             'stars': rating,
                             'bonus_levels': bonus_levels,
-                            'calories': total_cal
+                            'calories': total_cal,
+                            'unique_berries': len(name_counts),
+                            'inventory_sum': total_used_inventory
                         })
                 
                 if cur_flavor > best_min_found:
@@ -130,13 +138,15 @@ def save_results(results, target, num_berries, elapsed):
                 f"using {num_berries} berries in {elapsed:.2f}s "
                 f"(respecting current berry counts)\n\n")
         
-        sorted_res = sorted(results, key=lambda x: x['bonus_levels'], reverse=True)
+        sorted_res = sorted(results, key=lambda x: x['inventory_sum'], reverse=True)
         
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
             line = (
                 f"{i}. {r['stars']}★  ({', '.join(parts)})  "
                 f"Flavor: {r['flavor']}  "
+                f"Unique: {r['unique_berries']}  "
+                f"Inv-sum: {r['inventory_sum']}  "           # ← added
                 f"Bonus Levels: {r['bonus_levels']}  "
                 f"Calories: {r['calories']}\n"
             )

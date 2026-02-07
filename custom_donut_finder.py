@@ -39,7 +39,7 @@ def load_berries(file_path='hyper_berries.csv'):
 # ----------------------------------------------------
 # Backtracking with inventory check
 # ----------------------------------------------------
-def find_high_score_donuts(berries, target, num_berries=8):
+def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
     start_time = time.perf_counter()
     
     # Unpack for faster access
@@ -65,14 +65,15 @@ def find_high_score_donuts(berries, target, num_berries=8):
                 rating, mult = get_star_rating(cur_flavor)
                 bonus_levels = math.floor(cur_levels * mult)
                 total_cal = int(cur_cal * mult)
-                
-                results.append({
-                    'name_counts': name_counts,
-                    'flavor': cur_flavor,
-                    'stars': rating,
-                    'bonus_levels': bonus_levels,
-                    'calories': total_cal
-                })
+                if include_stars != "all":
+                    if rating in include_stars:    
+                        results.append({
+                            'name_counts': name_counts,
+                            'flavor': cur_flavor,
+                            'stars': rating,
+                            'bonus_levels': bonus_levels,
+                            'calories': total_cal
+                        })
                 
                 if cur_flavor > best_min_found:
                     best_min_found = cur_flavor
@@ -129,7 +130,7 @@ def save_results(results, target, num_berries, elapsed):
                 f"using {num_berries} berries in {elapsed:.2f}s "
                 f"(respecting current berry counts)\n\n")
         
-        sorted_res = sorted(results, key=lambda x: x['flavor'], reverse=True)
+        sorted_res = sorted(results, key=lambda x: x['bonus_levels'], reverse=True)
         
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
@@ -157,7 +158,8 @@ if __name__ == "__main__":
     
     TARGET = 700   # adjust as needed
     NUM_BERRIES = 8  # adjust as needed
-    results, elapsed = find_high_score_donuts(berries, target=TARGET, num_berries=NUM_BERRIES)
+    ONLY_STAR_RATING = [4]  # use "all" to include all star ratings
+    results, elapsed = find_high_score_donuts(berries, TARGET, NUM_BERRIES, ONLY_STAR_RATING)
     
     if results:
         save_results(results, TARGET, NUM_BERRIES, elapsed)

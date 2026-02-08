@@ -138,17 +138,24 @@ def save_results(results, target, num_berries, elapsed):
                 f"using {num_berries} berries in {elapsed:.2f}s "
                 f"(respecting current berry counts)\n\n")
         
-        sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['flavor']), reverse=True)
+        sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['calories']), reverse=True)
         
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
+            calories = r['calories']
+            duration = calories / 10 # 5 star portal
+            # 1 Star: ~1 Calorie/second (60 cal/min)
+            # 2 Star: ~1.6 Calories/second (96 cal/min)
+            # 3 Star: ~3.5 Calories/second (210 cal/min)
+            # 4 Star: ~7.5 Calories/second (450 cal/min)
+            # 5 Star: ~10 Calories/second (600 cal/min)
             line = (
                 f"{i}. {r['stars']}★  ({', '.join(parts)})  "
-                f"Flavor: {r['flavor']}  "
-                f"Unique: {r['unique_berries']}  "
-                f"Inv-sum: {r['inventory_sum']}  "           # ← added
-                f"Bonus Levels: {r['bonus_levels']}  "
-                f"Calories: {r['calories']}\n"
+                f"Inv-sum:{r['inventory_sum']} "           # ← added
+                f"Calories:{calories}({duration} sec) "
+                f"Bonus Levels:{r['bonus_levels']} "
+                f"Flavor:{r['flavor']} "
+                f"Unique:{r['unique_berries']}\n"
             )
             f.write(line)
     

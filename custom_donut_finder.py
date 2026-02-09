@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 import math
 import bisect
+import re
 
 # Star thresholds and multipliers
 starRatings = [0, 120, 240, 400, 700, 960]
@@ -23,6 +24,9 @@ def load_berries(file_path='hyper_berries.csv'):
         reader = csv.DictReader(f)
         for row in reader:
             name = row['Berry Name'].strip()
+            nameMatch = re.search(r"Hyper (\w+) Berry", name)
+            if nameMatch:
+                name = nameMatch.group(1)
             if not name:
                 continue
             try:
@@ -61,7 +65,7 @@ def load_berries(file_path='hyper_berries.csv'):
 # ----------------------------------------------------
 # Backtracking with inventory check
 # ----------------------------------------------------
-def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
+def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", include_flavors="all"):
     start_time = time.perf_counter()
 
     # Unpack for faster access
@@ -75,7 +79,6 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
     sours = [b[7] for b in berries]
     bitters = [b[8] for b in berries]
     freshes = [b[9] for b in berries]
-
     results = []
     best_min_found = target
 
@@ -99,8 +102,12 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
                     rating, mult = get_star_rating(cur_flavor)
                     bonus_levels = math.floor(cur_levels * mult)
                     total_cal = int(cur_cal * mult)
+                    max_single = max(cur_sweet, cur_spicy, cur_sour, cur_bitter, cur_fresh)
+                    max_flavor_name = ["Sweet", "Spicy", "Sour", "Bitter", "Fresh"][
+                        [cur_sweet, cur_spicy, cur_sour, cur_bitter, cur_fresh].index(max_single)
+                    ]
 
-                    if include_stars == "all" or rating in include_stars:
+                    if (include_stars == "all" or rating in include_stars) and (include_flavors == "all" or max_flavor_name in include_flavors):
                         results.append({
                             'name_counts': name_counts,
                             'flavor': cur_flavor,
@@ -115,6 +122,8 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all"):
                             'sour': cur_sour,
                             'bitter': cur_bitter,
                             'fresh': cur_fresh,
+                            'max_flavor_value': max_single,
+                            'max_flavor_type': max_flavor_name,
                         })
 
                     if cur_flavor > best_min_found:
@@ -183,11 +192,17 @@ def save_results(results, target, num_berries, elapsed):
 
         # Sort: highest inventory sum first, then lowest calories
         sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['calories']), reverse=True)
+        # sorted_res = sorted(results, key=lambda x: (x['calories'], x['inventory_sum']), reverse=True)
 
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
             calories = r['calories']
             duration = calories / 10  # assuming 5★ portal
+            # 1-Star Portal: 1 calorie per second (60 cal/min)
+            # 2-Star Portal: 1.6 calories per second (96 cal/min)
+            # 3-Star Portal: 3.5 calories per second (210 cal/min)
+            # 4-Star Portal: 7.5 calories per second (450 cal/min)
+            # 5-Star Portal: 10 calories per second (600 cal/min)
 
             flavor_breakdown = (
                 f"Sweet:{r['sweet']} Spicy:{r['spicy']} Sour:{r['sour']} "
@@ -195,7 +210,7 @@ def save_results(results, target, num_berries, elapsed):
             )
 
             line = (
-                f"{i}. {r['stars']}★  ({', '.join(parts)})  "
+                f"{i}. {r['stars']}★ ({r['max_flavor_type']}) ({', '.join(parts)})  "
                 f"Inv-sum:{r['inventory_sum']} "
                 f"Calories:{calories} ({duration:.1f}s) "
                 f"Bonus Lvl:{r['bonus_levels']} "
@@ -218,13 +233,15 @@ if __name__ == "__main__":
 
     TARGET = 400          # adjust as needed
     NUM_BERRIES = 8       # adjust as needed
-    ONLY_STAR_RATING = [3, 4]   # or "all"
+    ONLY_STAR_RATING = [3,4]   # or "all"
+    ONLY_FLAVORS = ["Spicy","Bitter","Fresh"]   # or "all"
 
     results, elapsed = find_high_score_donuts(
         berries,
         TARGET,
         NUM_BERRIES,
-        ONLY_STAR_RATING
+        ONLY_STAR_RATING,
+        ONLY_FLAVORS
     )
 
     if results:

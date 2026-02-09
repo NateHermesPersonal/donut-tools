@@ -210,8 +210,8 @@ def save_results(results, target, num_berries, elapsed):
             )
 
             line = (
-                f"{i}. {r['stars']}★ ({r['max_flavor_type']}) ({', '.join(parts)})  "
-                f"Inv-sum:{r['inventory_sum']} "
+                f"{i}. {r['stars']}★ ({r['max_flavor_type']}) ({', '.join(parts)})→"
+                f"# in Stock:{r['inventory_sum']} "
                 f"Calories:{calories} ({duration:.1f}s) "
                 f"Bonus Lvl:{r['bonus_levels']} "
                 f"Flavor:{r['flavor']}  "

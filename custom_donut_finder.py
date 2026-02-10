@@ -26,7 +26,7 @@ def load_berries(file_path='hyper_berries.csv'):
             name = row['Berry Name'].strip()
             nameMatch = re.search(r"Hyper (\w+) Berry", name)
             if nameMatch:
-                name = nameMatch.group(1)
+                name = f"H-{nameMatch.group(1)}"
             if not name:
                 continue
             try:

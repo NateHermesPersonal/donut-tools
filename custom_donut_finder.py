@@ -190,8 +190,9 @@ def save_results(results, target, num_berries, elapsed):
                 f"using {num_berries} berries in {elapsed:.2f}s "
                 f"(respecting current berry counts)\n\n")
 
-        # Sort: highest inventory sum first, then lowest calories
+        # Sort: highest inventory sum first, then highest calories
         sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['calories']), reverse=True)
+        # Sort: highest calories first, then highest inventory sum
         # sorted_res = sorted(results, key=lambda x: (x['calories'], x['inventory_sum']), reverse=True)
 
         for i, r in enumerate(sorted_res, 1):

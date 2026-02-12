@@ -198,7 +198,7 @@ def save_results(results, target, num_berries, elapsed):
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
             calories = r['calories']
-            duration = calories / 10  # assuming 5★ portal
+            duration = math.floor(calories / 10)  # assuming 5★ portal
             # 1-Star Portal: 1 calorie per second (60 cal/min)
             # 2-Star Portal: 1.6 calories per second (96 cal/min)
             # 3-Star Portal: 3.5 calories per second (210 cal/min)

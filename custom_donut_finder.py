@@ -223,9 +223,9 @@ def save_results(results, target, berry_count_str, elapsed):
                 f"{r['max_flavor_type']} ({r['max_flavor_value']})",
                 r['flavor'],
                 r['calories'],
-                f"{r['calories']/10:.1f}s",
+                f"{math.floor(r['calories']/10)}s",
                 r['inventory_sum'],
-                r['unique_berries'],
+                r['bonus_levels'],
                 composition
             ])
 
@@ -245,8 +245,8 @@ def save_results(results, target, berry_count_str, elapsed):
             "Calories",
             "Time (5★)",
             "Inventory",
-            "Unique",
-            "Composition"
+            "Levels",
+            "Recipe"
         ]
 
         # Create beautiful table
@@ -274,7 +274,7 @@ if __name__ == "__main__":
     print(f"Loaded {len(berries)} berries.\n")
 
     TARGET_FLAVOR = 400
-    MIN_BERRIES   = 5
+    MIN_BERRIES   = 3
     MAX_BERRIES   = 8
     ONLY_STAR_RATING = [3, 4]           # or "all"
     ONLY_FLAVORS     = ["Spicy", "Bitter", "Fresh"]   # or "all"

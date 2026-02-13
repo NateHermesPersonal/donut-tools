@@ -170,8 +170,7 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
     search(0, num_berries, 0, 0, 0, 0, 0, 0, 0, 0, [], initial_counts)
 
     elapsed = time.perf_counter() - start_time
-    print(f"Found {len(results):,} donuts ≥ {target} flavor in {elapsed:.2f} seconds "
-          f"(respecting inventory)")
+    print(f"Found {len(results):,} donuts ≥ {target} flavor in {elapsed:.2f} seconds")
     if results:
         print(f"Best flavor found: {max(r['flavor'] for r in results)}")
 
@@ -187,11 +186,11 @@ def save_results(results, target, num_berries, elapsed):
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(f"Found {len(results):,} donuts with ≥ {target} flavor "
-                f"using {num_berries} berries in {elapsed:.2f}s "
-                f"(respecting current berry counts)\n\n")
+                f"using {num_berries} berries in {elapsed:.2f}s\n\n")
 
         # Sort: highest inventory sum first, then highest calories
         sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['calories']), reverse=True)
+        
         # Sort: highest calories first, then highest inventory sum
         # sorted_res = sorted(results, key=lambda x: (x['calories'], x['inventory_sum']), reverse=True)
 

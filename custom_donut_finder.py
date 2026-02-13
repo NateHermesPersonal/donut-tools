@@ -180,13 +180,13 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
 # ----------------------------------------------------
 # Output
 # ----------------------------------------------------
-def save_results(results, target, num_berries, elapsed):
+def save_results(results, target, berry_count_str, elapsed):
     timestamp = datetime.now().strftime("%m%d%y_%H%M%S")
     filename = f"output/donut_recipes_{timestamp}.txt"
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(f"Found {len(results):,} donuts with ≥ {target} flavor "
-                f"using {num_berries} berries in {elapsed:.2f}s\n\n")
+                f"using {berry_count_str} berries in {elapsed:.2f}s\n\n")
 
         # Sort: highest inventory sum first, then highest calories
         sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['calories']), reverse=True)
@@ -196,6 +196,7 @@ def save_results(results, target, num_berries, elapsed):
 
         for i, r in enumerate(sorted_res, 1):
             parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
+            total_berries_used = sum(r['name_counts'].values())
             calories = r['calories']
             duration = math.floor(calories / 10)  # assuming 5★ portal
             # 1-Star Portal: 1 calorie per second (60 cal/min)
@@ -209,14 +210,26 @@ def save_results(results, target, num_berries, elapsed):
                 f"Bitter:{r['bitter']} Fresh:{r['fresh']}"
             )
 
+            # line = (
+            #     f"{i}. {r['stars']}★ ({r['max_flavor_type']}) "
+            #     f"{total_berries_used}→{', '.join(parts)} → "
+            #     f"In Stock:{r['inventory_sum']} "
+            #     f"Calories:{calories} ({duration:.1f}s) "
+            #     f"Bonus Lvl:{r['bonus_levels']} "
+            #     f"Flavor:{r['flavor']}  "
+            #     f"[{flavor_breakdown}] "
+            #     f"Unique Berries:{r['unique_berries']}\n"
+            # )
+
             line = (
-                f"{i}. {r['stars']}★ ({r['max_flavor_type']}) ({', '.join(parts)})→"
+                f"{i}. {total_berries_used} Berries – {r['stars']}★ ({r['max_flavor_type']}) "
+                f"({', '.join(parts)}) → "
                 f"In Stock:{r['inventory_sum']} "
                 f"Calories:{calories} ({duration:.1f}s) "
                 f"Bonus Lvl:{r['bonus_levels']} "
                 f"Flavor:{r['flavor']}  "
                 f"[{flavor_breakdown}] "
-                f"Unique:{r['unique_berries']}\n"
+                f"Unique Berries:{r['unique_berries']}\n"
             )
             f.write(line)
 
@@ -228,21 +241,32 @@ def save_results(results, target, num_berries, elapsed):
 # ----------------------------------------------------
 if __name__ == "__main__":
     berries = load_berries('hyper_berries.csv')
+    print(f"Loaded {len(berries)} berries.\n")
 
-    print(f"Loaded {len(berries)} berries.")
+    TARGET_FLAVOR = 400
+    MIN_BERRIES   = 5
+    MAX_BERRIES   = 8
+    ONLY_STAR_RATING = [3, 4]           # or "all"
+    ONLY_FLAVORS     = ["Spicy", "Bitter", "Fresh"]   # or "all"
 
-    TARGET = 400          # adjust as needed
-    NUM_BERRIES = 8       # adjust as needed
-    ONLY_STAR_RATING = [3,4]   # or "all"
-    ONLY_FLAVORS = ["Spicy","Bitter","Fresh"]   # or "all"
+    all_results = []
+    total_time = 0
 
-    results, elapsed = find_high_score_donuts(
-        berries,
-        TARGET,
-        NUM_BERRIES,
-        ONLY_STAR_RATING,
-        ONLY_FLAVORS
-    )
+    for num in range(MIN_BERRIES, MAX_BERRIES + 1):
+        print(f"\nSearching for {num}-berry donuts ≥ {TARGET_FLAVOR} flavor ...")
+        results, elapsed = find_high_score_donuts(
+            berries,
+            TARGET_FLAVOR,
+            num_berries = num,
+            include_stars = ONLY_STAR_RATING,
+            include_flavors = ONLY_FLAVORS
+        )
+        total_time += elapsed
+        all_results.extend(results)
+        print(f"  → found {len(results)} recipes in {elapsed:.2f}s")
 
-    if results:
-        save_results(results, TARGET, NUM_BERRIES, elapsed)
+    print(f"\nTotal recipes found: {len(all_results)}")
+    print(f"Total search time: {total_time:.2f}s")
+
+    if all_results:
+        save_results(all_results, TARGET_FLAVOR, f"{MIN_BERRIES}–{MAX_BERRIES}", total_time)

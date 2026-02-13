@@ -1,6 +1,7 @@
 import csv
 from collections import Counter
 from datetime import datetime
+from tabulate import tabulate
 import time
 import math
 import bisect
@@ -185,55 +186,84 @@ def save_results(results, target, berry_count_str, elapsed):
     filename = f"output/donut_recipes_{timestamp}.txt"
 
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f"Found {len(results):,} donuts with ≥ {target} flavor "
-                f"using {berry_count_str} berries in {elapsed:.2f}s\n\n")
+        f.write(f"Found {len(results):,} donuts with ≥ {target} flavor\n")
+        f.write(f"using {berry_count_str} berries in {elapsed:.2f}s "
+                f"(respecting current inventory)\n\n")
 
-        # Sort: highest inventory sum first, then highest calories
-        sorted_res = sorted(results, key=lambda x: (x['inventory_sum'], x['calories']), reverse=True)
-        
-        # Sort: highest calories first, then highest inventory sum
-        # sorted_res = sorted(results, key=lambda x: (x['calories'], x['inventory_sum']), reverse=True)
+        if not results:
+            f.write("No matching recipes found.\n")
+            print("No results to save.")
+            return
 
-        for i, r in enumerate(sorted_res, 1):
-            parts = [f"{cnt} {berry}" for berry, cnt in r['name_counts'].items()]
-            total_berries_used = sum(r['name_counts'].values())
-            calories = r['calories']
-            duration = math.floor(calories / 10)  # assuming 5★ portal
-            # 1-Star Portal: 1 calorie per second (60 cal/min)
-            # 2-Star Portal: 1.6 calories per second (96 cal/min)
-            # 3-Star Portal: 3.5 calories per second (210 cal/min)
-            # 4-Star Portal: 7.5 calories per second (450 cal/min)
-            # 5-Star Portal: 10 calories per second (600 cal/min)
+        # Prepare data for tabulate
+        table_data = []
 
-            flavor_breakdown = (
-                f"Sweet:{r['sweet']} Spicy:{r['spicy']} Sour:{r['sour']} "
-                f"Bitter:{r['bitter']} Fresh:{r['fresh']}"
+        for r in results:
+            # Sort berries alphabetically for nicer display (optional but recommended)
+            composition = ", ".join(
+                f"{cnt} {berry}" for berry, cnt in sorted(r['name_counts'].items())
             )
+            # Variant 1: allow much longer lines (recommended starting point)
+            if len(composition) > 120:
+                composition = composition[:117] + "..."
 
-            # line = (
-            #     f"{i}. {r['stars']}★ ({r['max_flavor_type']}) "
-            #     f"{total_berries_used}→{', '.join(parts)} → "
-            #     f"In Stock:{r['inventory_sum']} "
-            #     f"Calories:{calories} ({duration:.1f}s) "
-            #     f"Bonus Lvl:{r['bonus_levels']} "
-            #     f"Flavor:{r['flavor']}  "
-            #     f"[{flavor_breakdown}] "
-            #     f"Unique Berries:{r['unique_berries']}\n"
-            # )
+            # Variant 2: no truncation at all (best if you view in wide editor / scroll horizontally)
+            # composition = composition   # ← just remove the if-block completely
 
-            line = (
-                f"{i}. {total_berries_used} Berries – {r['stars']}★ ({r['max_flavor_type']}) "
-                f"({', '.join(parts)}) → "
-                f"In Stock:{r['inventory_sum']} "
-                f"Calories:{calories} ({duration:.1f}s) "
-                f"Bonus Lvl:{r['bonus_levels']} "
-                f"Flavor:{r['flavor']}  "
-                f"[{flavor_breakdown}] "
-                f"Unique Berries:{r['unique_berries']}\n"
-            )
-            f.write(line)
+            # Variant 3: medium-long + ellipsis only on really extreme cases
+            # if len(composition) > 90:
+            #     composition = composition[:87] + "..."
+                
 
-    print(f"Saved to: {filename}")
+            total_berries = sum(r['name_counts'].values())
+
+            table_data.append([
+                total_berries,
+                f"{r['stars']}★",
+                f"{r['max_flavor_type']} ({r['max_flavor_value']})",
+                r['flavor'],
+                r['calories'],
+                f"{r['calories']/10:.1f}s",
+                r['inventory_sum'],
+                r['unique_berries'],
+                composition
+            ])
+
+        # Change the sort order here — examples:
+
+        # Highest flavor → lowest calories
+        # table_data.sort(key=lambda row: (-row[3], row[4]))
+
+        # Most inventory → highest calories
+        table_data.sort(key=lambda row: (-row[6], -row[4]))
+
+        headers = [
+            "Berries",
+            "★",
+            "Dominant",
+            "Flavor",
+            "Calories",
+            "Time (5★)",
+            "Inventory",
+            "Unique",
+            "Composition"
+        ]
+
+        # Create beautiful table
+        table_str = tabulate(
+            table_data,
+            headers=headers,
+            tablefmt="github",          # clean markdown style – very readable
+            # tablefmt="grid",          # boxed style
+            # tablefmt="fancy_grid",    # fancier unicode borders
+            colalign=("right", "center", "left", "right", "right", "right", "right", "right", "left"),
+            stralign="left",
+            numalign="right",
+        )
+
+        f.write(table_str + "\n\n")
+
+    print(f"Saved formatted table to: {filename}")
 
 
 # ----------------------------------------------------

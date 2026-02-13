@@ -1,7 +1,7 @@
 import csv
 from collections import Counter
 from datetime import datetime
-from tabulate import tabulate
+from tabulate import tabulate # pip install tabulate
 import time
 import math
 import bisect

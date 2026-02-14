@@ -229,7 +229,7 @@ def save_results(results, target, berry_count_str, elapsed, berries):
                 f"{math.floor(r['calories']/10)}s",
                 r['inventory_sum'],
                 r['bonus_levels'],
-                composition
+                f"{composition} ({r['unique_berries']})"
             ])
 
         # You can change sorting here if desired

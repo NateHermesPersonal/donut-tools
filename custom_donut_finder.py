@@ -24,6 +24,7 @@ def load_berries(file_path='hyper_berries.csv'):
     with open(file_path, mode='r') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            original_index = int(row['Index'])
             name = row['Berry Name'].strip()
             nameMatch = re.search(r"Hyper (\w+) Berry", name)
             if nameMatch:
@@ -43,23 +44,24 @@ def load_berries(file_path='hyper_berries.csv'):
                 count = int(row.get('Count', 0))  # available inventory
 
                 berries.append((
-                    name,
-                    flavor_total,
-                    levels,
-                    calories,
-                    count,
-                    sweet,
-                    spicy,
-                    sour,
-                    bitter,
-                    fresh
+                    original_index,  # 0: original CSV index
+                    name,            # 1: berry name
+                    flavor_total,    # 2: total flavor
+                    levels,          # 3: levels
+                    calories,        # 4: calories
+                    count,           # 5: inventory count
+                    sweet,           # 6: sweet
+                    spicy,           # 7: spicy
+                    sour,            # 8: sour
+                    bitter,          # 9: bitter
+                    fresh            # 10: fresh
                 ))
             except (ValueError, KeyError) as e:
                 print(f"Skipping invalid row for '{name}': {e}")
                 continue
 
-    # Sort descending by total flavor score
-    berries.sort(key=lambda x: x[1], reverse=True)
+    # Sort descending by total flavor score FOR SEARCH PERFORMANCE (but we'll re-sort for display)
+    berries.sort(key=lambda x: x[2], reverse=True)
     return berries
 
 
@@ -70,16 +72,16 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
     start_time = time.perf_counter()
 
     # Unpack for faster access
-    names = [b[0] for b in berries]
-    scores = [b[1] for b in berries]          # total flavor
-    levels_list = [b[2] for b in berries]
-    cal_list = [b[3] for b in berries]
-    counts = [b[4] for b in berries]
-    sweets = [b[5] for b in berries]
-    spicies = [b[6] for b in berries]
-    sours = [b[7] for b in berries]
-    bitters = [b[8] for b in berries]
-    freshes = [b[9] for b in berries]
+    names = [b[1] for b in berries]
+    scores = [b[2] for b in berries]          # total flavor
+    levels_list = [b[3] for b in berries]
+    cal_list = [b[4] for b in berries]
+    counts = [b[5] for b in berries]
+    sweets = [b[6] for b in berries]
+    spicies = [b[7] for b in berries]
+    sours = [b[8] for b in berries]
+    bitters = [b[9] for b in berries]
+    freshes = [b[10] for b in berries]
     results = []
     best_min_found = target
 
@@ -181,7 +183,7 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
 # ----------------------------------------------------
 # Output
 # ----------------------------------------------------
-def save_results(results, target, berry_count_str, elapsed):
+def save_results(results, target, berry_count_str, elapsed, berries):
     timestamp = datetime.now().strftime("%m%d%y_%H%M%S")
     filename = f"output/donut_recipes_{timestamp}.txt"
 
@@ -198,22 +200,23 @@ def save_results(results, target, berry_count_str, elapsed):
         # Prepare data for tabulate
         table_data = []
 
+        # Sort berries by original_index ASCENDING for recipe display
+        sorted_berries = sorted(berries, key=lambda x: x[0])
+
         for r in results:
-            # Sort berries alphabetically for nicer display (optional but recommended)
-            composition = ", ".join(
-                f"{cnt} {berry}" for berry, cnt in sorted(r['name_counts'].items())
-            )
-            # Variant 1: allow much longer lines (recommended starting point)
+            # Build recipe string in ascending CSV index order (only include used berries)
+            parts = []
+            for berry_tuple in sorted_berries:
+                berry_name = berry_tuple[1]
+                cnt = r['name_counts'].get(berry_name, 0)
+                if cnt > 0:
+                    parts.append(f"{cnt} {berry_name}")
+
+            composition = ", ".join(parts)
+
+            # Optional: truncate very long lines
             if len(composition) > 120:
                 composition = composition[:117] + "..."
-
-            # Variant 2: no truncation at all (best if you view in wide editor / scroll horizontally)
-            # composition = composition   # ← just remove the if-block completely
-
-            # Variant 3: medium-long + ellipsis only on really extreme cases
-            # if len(composition) > 90:
-            #     composition = composition[:87] + "..."
-                
 
             total_berries = sum(r['name_counts'].values())
 
@@ -229,16 +232,12 @@ def save_results(results, target, berry_count_str, elapsed):
                 composition
             ])
 
-        # Change the sort order here — examples:
-
-        # Highest flavor → lowest calories
-        # table_data.sort(key=lambda row: (-row[3], row[4]))
-
-        # Most inventory → highest calories
+        # You can change sorting here if desired
+        # Current: most inventory → highest calories
         table_data.sort(key=lambda row: (-row[6], -row[4]))
 
         headers = [
-            "Berries",
+            "Count",
             "★",
             "Dominant",
             "Flavor",
@@ -253,9 +252,7 @@ def save_results(results, target, berry_count_str, elapsed):
         table_str = tabulate(
             table_data,
             headers=headers,
-            tablefmt="github",          # clean markdown style – very readable
-            # tablefmt="grid",          # boxed style
-            # tablefmt="fancy_grid",    # fancier unicode borders
+            tablefmt="github",
             colalign=("right", "center", "left", "right", "right", "right", "right", "right", "left"),
             stralign="left",
             numalign="right",
@@ -299,4 +296,5 @@ if __name__ == "__main__":
     print(f"Total search time: {total_time:.2f}s")
 
     if all_results:
-        save_results(all_results, TARGET_FLAVOR, f"{MIN_BERRIES}–{MAX_BERRIES}", total_time)
+        # Pass berries here so save_results can use original order
+        save_results(all_results, TARGET_FLAVOR, f"{MIN_BERRIES}–{MAX_BERRIES}", total_time, berries)

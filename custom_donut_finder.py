@@ -100,7 +100,7 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
                     total_used_inventory = 0
                     for berry_name in name_counts:
                         idx = names.index(berry_name)
-                        total_used_inventory += counts[idx]
+                        total_used_inventory += counts[idx] # inventory of each unique berry
 
                     rating, mult = get_star_rating(cur_flavor)
                     bonus_levels = math.floor(cur_levels * mult)

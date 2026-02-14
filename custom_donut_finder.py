@@ -221,7 +221,7 @@ def save_results(results, target, berry_count_str, elapsed, berries):
             total_berries = sum(r['name_counts'].values())
 
             table_data.append([
-                total_berries,
+                f"{total_berries} ({r['unique_berries']})",
                 f"{r['stars']}★",
                 f"{r['max_flavor_type']} ({r['max_flavor_value']})",
                 r['flavor'],
@@ -229,7 +229,7 @@ def save_results(results, target, berry_count_str, elapsed, berries):
                 f"{math.floor(r['calories']/10)}s",
                 r['inventory_sum'],
                 r['bonus_levels'],
-                f"{composition} ({r['unique_berries']})"
+                composition
             ])
 
         # You can change sorting here if desired

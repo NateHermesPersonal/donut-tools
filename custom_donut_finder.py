@@ -226,7 +226,7 @@ def save_results(results, target, berry_count_str, elapsed, berries):
                 f"{r['max_flavor_type']} ({r['max_flavor_value']})",
                 r['flavor'],
                 r['calories'],
-                f"{math.floor(r['calories']/10)}s",
+                f"{math.floor(r['calories']/10)}s", # 5 star calorie burn rate
                 r['inventory_sum'],
                 r['bonus_levels'],
                 composition

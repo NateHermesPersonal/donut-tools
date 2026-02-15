@@ -274,7 +274,8 @@ if __name__ == "__main__":
     MIN_BERRIES   = 3
     MAX_BERRIES   = 8
     ONLY_STAR_RATING = [3, 4]           # or "all"
-    ONLY_FLAVORS     = ["Spicy", "Bitter", "Fresh"]   # or "all"
+    ONLY_FLAVORS     = "all"
+    # ONLY_FLAVORS     = ["Spicy", "Bitter", "Fresh"]   # or "all"
 
     all_results = []
     total_time = 0

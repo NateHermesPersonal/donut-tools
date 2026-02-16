@@ -133,8 +133,8 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
                         best_min_found = cur_flavor
             return
 
-        if remaining == 0:
-            return
+        # if remaining == 0:
+        #     return
 
         # Pruning: can't reach target even if we take max of everything left
         max_possible = cur_flavor + scores[pos] * remaining
@@ -273,7 +273,7 @@ if __name__ == "__main__":
     TARGET_FLAVOR = 400
     MIN_BERRIES   = 3
     MAX_BERRIES   = 8
-    ONLY_STAR_RATING = [3, 4]           # or "all"
+    ONLY_STAR_RATING = [3,4]           # or "all"
     ONLY_FLAVORS     = "all"
     # ONLY_FLAVORS     = ["Spicy", "Bitter", "Fresh"]   # or "all"
 

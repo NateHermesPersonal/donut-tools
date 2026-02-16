@@ -1,0 +1,120 @@
+Great, that fixes it! If I want to further expand the script to take in a number of donuts I want to make, how would I only show recipes that I have enough of each berry to make say 4 of that donutTo extend the script so you can request N donuts of the same recipe (e.g., make 4 identical donuts), and only show recipes where your current inventory is sufficient to produce at least N of them, here’s how to modify the code cleanly.
+The key idea is:
+
+For each valid donut recipe found (i.e. a combination of berries that uses certain counts of each type),
+Multiply every berry count in that recipe by N,
+Check if the multiplied counts are ≤ available inventory for every berry used.
+
+Step-by-step modifications
+
+Add a new parameter to control how many donuts you want to produceAdd this near the top of the if __name__ == "__main__": block:PythonDESIRED_DONUTS = 4          # ← change this to whatever number you want(You can also make it a command-line argument later if you want.)
+Modify find_high_score_donuts to accept the new parameter and pass it throughUpdate the function signature:Pythondef find_high_score_donuts(berries, target, num_berries=8,
+                           include_stars="all", include_flavors="all",
+                           min_donuts=1):   # ← new parameterThen inside the function, pass min_donuts to save_results (you'll add it there next).
+Add inventory check for multiple donuts in save_resultsThis is the most natural place, right before adding a recipe to table_data.Replace the current loop body in save_results with something like this:Pythonfor r in results:
+    # Check if we have enough berries for min_donuts copies
+    can_make = True
+    required = {}
+    for berry_name, single_count in r['name_counts'].items():
+        req = single_count * min_donuts
+        required[berry_name] = req
+        idx = names.index(berry_name)  # we need the original index → we'll add names list
+        avail = counts[idx]
+        if req > avail:
+            can_make = False
+            break
+
+    if not can_make:
+        continue
+
+    # If we reach here → we can make at least min_donuts copies
+
+    # Build recipe string (same as before, but now show per-donut + total)
+    parts = []
+    for berry_tuple in sorted_berries:
+        berry_name = berry_tuple[1]
+        cnt_per = r['name_counts'].get(berry_name, 0)
+        if cnt_per > 0:
+            total_cnt = cnt_per * min_donuts
+            parts.append(f"{cnt_per}×{min_donuts} = {total_cnt} {berry_name}")
+
+    composition = ", ".join(parts)
+    if len(composition) > 120:
+        composition = composition[:117] + "..."
+
+    total_berries_used = sum(r['name_counts'].values()) * min_donuts
+
+    table_data.append([
+        f"{total_berries_used} ({r['unique_berries']})",
+        f"{r['stars']}★",
+        f"{r['max_flavor_type']} ({r['max_flavor_value']})",
+        r['flavor'],
+        r['calories'] * min_donuts,               # total calories for N donuts
+        f"{math.floor((r['calories'] * min_donuts)/10)}s",  # time estimate
+        sum(required.values()),                   # total inventory berries used
+        r['bonus_levels'] * min_donuts,           # total bonus levels
+        composition
+    ])Small improvement: also update the file header / summary line:Pythonf.write(f"Found {len(table_data):,} donut recipes (each can make ≥ {min_donuts} donuts) "
+        f"with ≥ {target} flavor per donut\n")
+f.write(f"using {berry_count_str} berries per donut, respecting inventory for {min_donuts}× copies\n\n")
+Pass the new parameter throughIn the main loop, when calling find_high_score_donuts:Pythonresults, elapsed = find_high_score_donuts(
+    berries,
+    TARGET_FLAVOR,
+    num_berries = num,
+    include_stars = ONLY_STAR_RATING,
+    include_flavors = ONLY_FLAVORS,
+    min_donuts = DESIRED_DONUTS          # ← add this
+)And when calling save_results:Pythonsave_results(all_results, TARGET_FLAVOR, f"{MIN_BERRIES}–{MAX_BERRIES}",
+             total_time, berries, min_donuts=DESIRED_DONUTS)(You’ll need to update the save_results function signature too:)Pythondef save_results(results, target, berry_count_str, elapsed, berries, min_donuts=1):
+    # ... rest as before
+Optional nice-to-have columnsYou can add columns like:
+“Per donut berries” (original count)
+“Total berries needed”
+“Inventory remaining after making N” (for debugging)
+But the version above already shows clear cnt_per × N = total in the recipe.
+
+Summary of changes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+LocationChange summaryMain blockAdd DESIRED_DONUTS = 4find_high_score_donuts signatureAdd min_donuts=1 parameterMain loop callPass min_donuts=DESIRED_DONUTSsave_results signatureAdd min_donuts=1 parametersave_results loopAdd inventory check: single_count * min_donuts <= available for each berrysave_results compositionShow per-donut × N = totalsave_results table rowMultiply calories, bonus levels, total berries used by min_donutsFile headerMention that each recipe supports ≥ N donuts
+After these changes, when you set DESIRED_DONUTS = 4, only recipes will appear where you have enough berries to craft at least 4 copies of that exact donut.
+Let me know if you want a version that also shows “short by X of Berry Y” for the ones that almost qualify, or if you want to sort by how many you can actually make (max producible).

@@ -68,7 +68,7 @@ def load_berries(file_path='hyper_berries.csv'):
 # ----------------------------------------------------
 # Backtracking with inventory check
 # ----------------------------------------------------
-def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", include_flavors="all"):
+def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", include_flavors="all", min_donuts=1):
     start_time = time.perf_counter()
 
     # Unpack for faster access
@@ -183,17 +183,18 @@ def find_high_score_donuts(berries, target, num_berries=8, include_stars="all", 
 # ----------------------------------------------------
 # Output
 # ----------------------------------------------------
-def save_results(results, target, berry_count_str, elapsed, berries):
+def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=1):
     timestamp = datetime.now().strftime("%m%d%y_%H%M%S")
     filename = f"output/donut_recipes_{timestamp}.txt"
 
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f"Found {len(results):,} donuts with ≥ {target} flavor\n")
-        f.write(f"using {berry_count_str} berries in {elapsed:.2f}s "
-                f"(respecting current inventory)\n\n")
+        plural = "s" if min_donuts > 1 else ""
+        f.write(f"Found {len(results):,} donut recipes (each ≥ {target} flavor)\n")
+        f.write(f"that you have enough berries to craft at least {min_donuts} donut{plural}\n")
+        f.write(f"using {berry_count_str} berries per donut — total search time: {elapsed:.2f}s\n\n")
 
         if not results:
-            f.write("No matching recipes found.\n")
+            f.write("No matching recipes found that meet the inventory requirement.\n")
             print("No results to save.")
             return
 
@@ -203,14 +204,38 @@ def save_results(results, target, berry_count_str, elapsed, berries):
         # Sort berries by original_index ASCENDING for recipe display
         sorted_berries = sorted(berries, key=lambda x: x[0])
 
+        # For quick inventory lookup
+        names = [b[1] for b in berries]
+        avail_counts = [b[5] for b in berries]  # available inventory
+
         for r in results:
             # Build recipe string in ascending CSV index order (only include used berries)
+            can_make = True
             parts = []
             for berry_tuple in sorted_berries:
                 berry_name = berry_tuple[1]
                 cnt = r['name_counts'].get(berry_name, 0)
-                if cnt > 0:
+                if cnt == 0:
+                    continue
+                else:
                     parts.append(f"{cnt} {berry_name}")
+
+                needed = cnt * min_donuts
+                try:
+                    idx = names.index(berry_name)
+                except ValueError:
+                    # Shouldn't happen, but safety check
+                    can_make = False
+                    break
+
+                available = avail_counts[idx]
+
+                if needed > available:
+                    can_make = False
+                    break
+
+            if not can_make:
+                continue
 
             composition = ", ".join(parts)
 
@@ -239,7 +264,7 @@ def save_results(results, target, berry_count_str, elapsed, berries):
         headers = [
             "Count",
             "★",
-            "Dominant",
+            "Flavor",
             "Flavor",
             "Calories",
             "Time (5★)",
@@ -270,6 +295,7 @@ if __name__ == "__main__":
     berries = load_berries('hyper_berries.csv')
     print(f"Loaded {len(berries)} berries.\n")
 
+    DESIRED_DONUTS = 4
     TARGET_FLAVOR = 400
     MIN_BERRIES   = 3
     MAX_BERRIES   = 8
@@ -287,7 +313,8 @@ if __name__ == "__main__":
             TARGET_FLAVOR,
             num_berries = num,
             include_stars = ONLY_STAR_RATING,
-            include_flavors = ONLY_FLAVORS
+            include_flavors = ONLY_FLAVORS,
+            min_donuts = DESIRED_DONUTS
         )
         total_time += elapsed
         all_results.extend(results)
@@ -298,4 +325,4 @@ if __name__ == "__main__":
 
     if all_results:
         # Pass berries here so save_results can use original order
-        save_results(all_results, TARGET_FLAVOR, f"{MIN_BERRIES}–{MAX_BERRIES}", total_time, berries)
+        save_results(all_results, TARGET_FLAVOR, f"{MIN_BERRIES}–{MAX_BERRIES}", total_time, berries, min_donuts = DESIRED_DONUTS)

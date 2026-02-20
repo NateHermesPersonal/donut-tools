@@ -248,21 +248,25 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
             berries_left = int(r['inventory_sum'])-int(total_berries)
 
             table_data.append([
-                f"{total_berries} ({r['unique_berries']})",
+                total_berries,
+                # f"{total_berries} ({r['unique_berries']})",
                 f"{r['stars']}★",
                 f"{r['max_flavor_type']} ({r['max_flavor_value']})",
                 r['flavor'],
                 r['calories'],
                 f"{math.floor(r['calories']/10)}s", # 5 star calorie burn rate
-                # r['inventory_sum'],
-                berries_left,
+                r['inventory_sum'],
+                # berries_left,
                 r['bonus_levels'],
                 composition
             ])
 
         # You can change sorting here if desired
         # Current: most inventory → highest calories
-        table_data.sort(key=lambda row: (-row[6], -row[4]))
+        # table_data.sort(key=lambda row: (-row[6], -row[4]))
+
+        # lowest berries used → highest calories
+        table_data.sort(key=lambda row: (row[0], -row[4]))
 
         headers = [
             "Count",
@@ -271,8 +275,8 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
             "Score",
             "Calories",
             "Time (5★)",
-            # "Inventory",
-            "Inv Left",
+            "Inventory",
+            # "Inv Left",
             "Levels",
             "Recipe"
         ]
@@ -299,7 +303,7 @@ if __name__ == "__main__":
     berries = load_berries('hyper_berries.csv')
     print(f"Loaded {len(berries)} berries.\n")
 
-    DESIRED_DONUTS = 4
+    DESIRED_DONUTS = 3
     TARGET_FLAVOR = 400
     MIN_BERRIES   = 3
     MAX_BERRIES   = 8

@@ -189,9 +189,10 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
 
     with open(filename, 'w', encoding='utf-8') as f:
         plural = "s" if min_donuts > 1 else ""
-        f.write(f"Found {len(results):,} donut recipes (each ≥ {target} flavor)\n")
+        f.write(f"Found {len(results):,} donut recipes (each ≥ {target} flavor score)\n")
         f.write(f"that you have enough berries to craft at least {min_donuts} donut{plural}\n")
-        f.write(f"using {berry_count_str} berries per donut — total search time: {elapsed:.2f}s\n\n")
+        f.write(f"using {berry_count_str} berries per donut\n")
+        f.write(f"total search time: {elapsed:.2f}s\n\n")
 
         if not results:
             f.write("No matching recipes found that meet the inventory requirement.\n")
@@ -244,6 +245,7 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
                 composition = composition[:117] + "..."
 
             total_berries = sum(r['name_counts'].values())
+            berries_left = int(r['inventory_sum'])-int(total_berries)
 
             table_data.append([
                 f"{total_berries} ({r['unique_berries']})",
@@ -252,7 +254,8 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
                 r['flavor'],
                 r['calories'],
                 f"{math.floor(r['calories']/10)}s", # 5 star calorie burn rate
-                r['inventory_sum'],
+                # r['inventory_sum'],
+                berries_left,
                 r['bonus_levels'],
                 composition
             ])
@@ -265,10 +268,11 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
             "Count",
             "★",
             "Flavor",
-            "Flavor",
+            "Score",
             "Calories",
             "Time (5★)",
-            "Inventory",
+            # "Inventory",
+            "Inv Left",
             "Levels",
             "Recipe"
         ]
@@ -300,14 +304,14 @@ if __name__ == "__main__":
     MIN_BERRIES   = 3
     MAX_BERRIES   = 8
     ONLY_STAR_RATING = [3,4]           # or "all"
-    # ONLY_FLAVORS     = "all"
-    ONLY_FLAVORS     = ["Sour","Spicy", "Bitter", "Fresh"]   # or "all"
+    ONLY_FLAVORS     = "all"
+    # ONLY_FLAVORS     = ["Sour","Spicy", "Bitter", "Fresh"]   # or "all"
 
     all_results = []
     total_time = 0
 
     for num in range(MIN_BERRIES, MAX_BERRIES + 1):
-        print(f"\nSearching for {num}-berry donuts ≥ {TARGET_FLAVOR} flavor ...")
+        print(f"\nSearching for {num}-berry donuts ≥ {TARGET_FLAVOR} flavor score ...")
         results, elapsed = find_high_score_donuts(
             berries,
             TARGET_FLAVOR,

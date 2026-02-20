@@ -261,12 +261,11 @@ def save_results(results, target, berry_count_str, elapsed, berries, min_donuts=
                 composition
             ])
 
-        # You can change sorting here if desired
-        # Current: most inventory → highest calories
+        # most inventory → highest calories
         # table_data.sort(key=lambda row: (-row[6], -row[4]))
 
-        # lowest berries used → highest calories
-        table_data.sort(key=lambda row: (row[0], -row[4]))
+        # lowest berries used → highest calories → most inventory
+        table_data.sort(key=lambda row: (row[0], -row[4], -row[6]))
 
         headers = [
             "Count",

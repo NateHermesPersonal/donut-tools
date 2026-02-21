@@ -304,7 +304,7 @@ if __name__ == "__main__":
 
     DESIRED_DONUTS = 3
     TARGET_FLAVOR = 400
-    MIN_BERRIES   = 4
+    MIN_BERRIES   = 3
     MAX_BERRIES   = 8
     ONLY_STAR_RATING = "all"
     # ONLY_FLAVORS     = "all"
